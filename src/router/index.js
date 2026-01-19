@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,16 +9,72 @@ const router = createRouter({
       redirect: '/login',
     },
     {
-      path: '/home',
-      name: 'home',
-      component: () => import('@/views/home/homeView.vue')
-    },
-    {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/login/loginView.vue')
-    }
+      component: () => import('@/views/login/loginView.vue'),
+    },
+    {
+      path: '/admin',
+      component: () => import('@/layouts/AdminLayout.vue'),
+      redirect: '/admin/banner',
+      children: [
+        {
+          path: 'banner',
+          name: 'admin-banner',
+          component: () => import('@/views/admin/banner/BannerManageView.vue'),
+        },
+        {
+          path: 'profile',
+          name: 'admin-profile',
+          component: () => import('@/views/admin/profile/StudioProfileManageView.vue'),
+        },
+        {
+          path: 'news',
+          name: 'admin-news',
+          component: () => import('@/views/admin/news/NewsManageView.vue'),
+        },
+        {
+          path: 'account',
+          name: 'admin-account',
+          component: () => import('@/views/admin/account/AccountView.vue'),
+        },
+        {
+          path: 'topics',
+          name: 'admin-topics',
+          component: () => import('@/views/admin/topic/TopicManageView.vue'),
+        },
+        {
+          path: 'articles',
+          name: 'admin-articles',
+          component: () => import('@/views/admin/article/ArticleManageView.vue'),
+        },
+        {
+          path: 'chat',
+          name: 'admin-chat',
+          component: () => import('@/views/admin/chat/ChatView.vue'),
+        },
+        {
+          path: 'upload',
+          name: 'admin-upload',
+          component: () => import('@/views/admin/upload/UploadImageView.vue'),
+        },
+      ],
+    },
+    {
+      path: '/home',
+      redirect: '/admin',
+    },
   ],
+})
+
+router.beforeEach((to) => {
+  if (to.path.startsWith('/admin')) {
+    const userStore = useUserStore()
+    if (!userStore.token) {
+      return { path: '/login' }
+    }
+  }
+  return true
 })
 
 export default router
