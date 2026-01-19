@@ -1,12 +1,19 @@
 <template>
   <div class="page">
-    <el-card>
+    <el-card shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">产教融合文章</div>
           <div class="page-actions">
-            <el-button type="primary" @click="openCreate">新增文章</el-button>
-            <el-button @click="fetchPage">刷新</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="openCreate">新增文章</el-button>
+            <el-button
+              plain
+              :icon="Refresh"
+              :loading="loading"
+              :disabled="loading"
+              @click="fetchPage"
+              >刷新</el-button
+            >
           </div>
         </div>
       </template>
@@ -15,7 +22,7 @@
         <el-input v-model="filters.keyword" placeholder="关键词" clearable style="max-width: 260px" />
         <el-input v-model="filters.tags" placeholder="标签(逗号分隔)" clearable style="max-width: 260px" />
         <el-input v-model="filters.topicId" placeholder="主题ID" clearable style="max-width: 180px" />
-        <el-button type="primary" @click="fetchPage">查询</el-button>
+        <el-button type="primary" plain :icon="Search" @click="fetchPage">查询</el-button>
       </div>
 
       <el-table :data="records" v-loading="loading" style="width: 100%">
@@ -33,11 +40,11 @@
         <el-table-column prop="viewCount" label="浏览" width="100" />
         <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">编辑</el-button>
-            <el-button size="small" type="success" @click="togglePublish(row)">
+            <el-button size="small" plain :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button size="small" type="success" plain :icon="Promotion" @click="togglePublish(row)">
               {{ row.publishStatus === 1 ? '撤销发布' : '发布' }}
             </el-button>
-            <el-button size="small" type="danger" @click="removeRow(row)">删除</el-button>
+            <el-button size="small" type="danger" plain :icon="Delete" @click="removeRow(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -57,7 +64,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="860px" destroy-on-close>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="860px" destroy-on-close align-center>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
         <el-form-item label="主题ID" prop="topicId">
           <el-input-number v-model="form.topicId" :min="1" :step="1" />
@@ -80,8 +87,8 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submit">保存</el-button>
+        <el-button plain :icon="Close" @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" plain :icon="Check" :loading="saving" @click="submit">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -90,6 +97,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Check, Close, Delete, Edit, Plus, Promotion, Refresh, Search } from '@element-plus/icons-vue'
 import {
   createAdminIeArticle,
   deleteAdminIeArticle,

@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <el-card>
+    <el-card shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">用户与登录系统</div>

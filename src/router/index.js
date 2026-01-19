@@ -6,7 +6,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/login',
+      redirect: '/admin',
     },
     {
       path: '/login',
@@ -53,11 +53,7 @@ const router = createRouter({
           name: 'admin-chat',
           component: () => import('@/views/admin/chat/ChatView.vue'),
         },
-        {
-          path: 'upload',
-          name: 'admin-upload',
-          component: () => import('@/views/admin/upload/UploadImageView.vue'),
-        },
+
       ],
     },
     {
@@ -68,12 +64,21 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
+  const userStore = useUserStore()
+
+  if (to.path === '/login') {
+    if (userStore.token) {
+      return { path: '/admin' }
+    }
+    return true
+  }
+
   if (to.path.startsWith('/admin')) {
-    const userStore = useUserStore()
     if (!userStore.token) {
       return { path: '/login' }
     }
   }
+
   return true
 })
 

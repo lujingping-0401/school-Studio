@@ -1,12 +1,19 @@
 <template>
   <div class="page">
-    <el-card>
+    <el-card shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">工作动态 / 活动</div>
           <div class="page-actions">
-            <el-button type="primary" @click="openCreate">发布新动态</el-button>
-            <el-button @click="fetchPage">刷新</el-button>
+            <el-button type="primary" plain :icon="Plus" @click="openCreate">发布新动态</el-button>
+            <el-button
+              plain
+              :icon="Refresh"
+              :loading="loading"
+              :disabled="loading"
+              @click="fetchPage"
+              >刷新</el-button
+            >
           </div>
         </div>
       </template>
@@ -14,7 +21,7 @@
       <div class="toolbar">
         <el-input v-model="filters.keyword" placeholder="关键词" clearable style="max-width: 260px" />
         <el-input v-model="filters.tags" placeholder="标签(逗号分隔)" clearable style="max-width: 260px" />
-        <el-button type="primary" @click="fetchPage">查询</el-button>
+        <el-button type="primary" plain :icon="Search" @click="fetchPage">查询</el-button>
       </div>
 
       <el-table :data="records" v-loading="loading" style="width: 100%">
@@ -38,11 +45,11 @@
         </el-table-column>
         <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">编辑</el-button>
-            <el-button size="small" type="success" @click="togglePublish(row)">
+            <el-button size="small" plain :icon="Edit" @click="openEdit(row)">编辑</el-button>
+            <el-button size="small" type="success" plain :icon="Promotion" @click="togglePublish(row)">
               {{ row.publishStatus === 1 ? '撤销发布' : '发布' }}
             </el-button>
-            <el-button size="small" type="danger" @click="removeRow(row)">删除</el-button>
+            <el-button size="small" type="danger" plain :icon="Delete" @click="removeRow(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -62,42 +69,44 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="820px" destroy-on-close>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="form.title" />
-        </el-form-item>
-        <el-form-item label="标签" prop="tags">
-          <el-input v-model="form.tags" placeholder="tag1,tag2" />
-        </el-form-item>
-        <el-form-item label="时间" prop="time">
-          <el-date-picker
-            v-model="form.time"
-            type="datetimerange"
-            range-separator="-"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            value-format="YYYY-MM-DDTHH:mm:ss"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="地点" prop="location">
-          <el-input v-model="form.location" />
-        </el-form-item>
-        <el-form-item label="封面URL" prop="coverUrl">
-          <el-input v-model="form.coverUrl" placeholder="https://..." />
-        </el-form-item>
-        <el-form-item label="内容HTML" prop="contentHtml">
-          <el-input v-model="form.contentHtml" type="textarea" :rows="10" />
-        </el-form-item>
-        <el-form-item label="启用" prop="enableStatus">
-          <el-switch v-model="enableSwitch" />
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="820px" destroy-on-close align-center top="5vh">
+      <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px">
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
+          <el-form-item label="标题" prop="title">
+            <el-input v-model="form.title" />
+          </el-form-item>
+          <el-form-item label="标签" prop="tags">
+            <el-input v-model="form.tags" placeholder="tag1,tag2" />
+          </el-form-item>
+          <el-form-item label="时间" prop="time">
+            <el-date-picker
+              v-model="form.time"
+              type="datetimerange"
+              range-separator="-"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              value-format="YYYY-MM-DDTHH:mm:ss"
+              style="width: 100%"
+            />
+          </el-form-item>
+          <el-form-item label="地点" prop="location">
+            <el-input v-model="form.location" />
+          </el-form-item>
+          <el-form-item label="封面URL" prop="coverUrl">
+            <el-input v-model="form.coverUrl" placeholder="https://..." />
+          </el-form-item>
+          <el-form-item label="内容HTML" prop="contentHtml">
+            <el-input v-model="form.contentHtml" type="textarea" :rows="10" />
+          </el-form-item>
+          <el-form-item label="启用" prop="enableStatus">
+            <el-switch v-model="enableSwitch" />
+          </el-form-item>
+        </el-form>
+      </div>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submit">保存</el-button>
+        <el-button plain :icon="Close" @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" plain :icon="Check" :loading="saving" @click="submit">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -106,6 +115,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Check, Close, Delete, Edit, Plus, Promotion, Refresh, Search } from '@element-plus/icons-vue'
 import {
   createAdminStudioNews,
   deleteAdminStudioNews,

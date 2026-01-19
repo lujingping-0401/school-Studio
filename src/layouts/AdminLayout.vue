@@ -65,11 +65,6 @@
             <el-icon><ChatDotRound /></el-icon>
             <span>在线咨询</span>
           </el-menu-item>
-
-          <el-menu-item index="/admin/upload">
-            <el-icon><Upload /></el-icon>
-            <span>图片上传</span>
-          </el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -81,9 +76,9 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user";
 import {
   ArrowDown,
   ChatDotRound,
@@ -92,40 +87,39 @@ import {
   Notification,
   Picture,
   Reading,
-  Upload,
   User,
-} from '@element-plus/icons-vue'
+} from "@element-plus/icons-vue";
 
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
 
-const isCollapsed = ref(false)
+const isCollapsed = ref(false);
 
 function syncCollapse() {
-  isCollapsed.value = window.innerWidth <= 960
+  isCollapsed.value = window.innerWidth <= 960;
 }
 
 onMounted(() => {
-  syncCollapse()
-  window.addEventListener('resize', syncCollapse)
-})
+  syncCollapse();
+  window.addEventListener("resize", syncCollapse);
+});
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', syncCollapse)
-})
+  window.removeEventListener("resize", syncCollapse);
+});
 
-const asideWidth = computed(() => (isCollapsed.value ? '64px' : '220px'))
-const activeMenu = computed(() => route.path)
+const asideWidth = computed(() => (isCollapsed.value ? "64px" : "220px"));
+const activeMenu = computed(() => route.path);
 
 function goDefault() {
-  router.push('/admin/banner')
+  router.push("/admin/banner");
 }
 
 function handleCommand(cmd) {
-  if (cmd === 'logout') {
-    userStore.logout()
-    router.push('/login')
+  if (cmd === "logout") {
+    userStore.logout();
+    router.push("/login");
   }
 }
 </script>
@@ -176,7 +170,7 @@ function handleCommand(cmd) {
 }
 
 .admin-body {
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
 }
 
 .admin-aside {
@@ -192,5 +186,15 @@ function handleCommand(cmd) {
 
 .admin-main {
   padding: 16px;
+  height: 100%;
+  overflow: auto;
+}
+
+.admin-main :deep(.page) {
+  height: 100%;
+}
+
+.admin-main :deep(.page-card) {
+  height: 100%;
 }
 </style>
