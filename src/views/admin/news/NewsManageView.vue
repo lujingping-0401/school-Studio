@@ -27,7 +27,18 @@
       <el-table :data="records" v-loading="loading" style="width: 100%">
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="title" label="标题" min-width="240" show-overflow-tooltip />
-        <el-table-column prop="tags" label="标签" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="tags" label="标签" min-width="160" show-overflow-tooltip>
+          <template #default="{ row }">
+            <el-tag
+              v-for="(tag, idx) in (row.tags ? row.tags.split(',') : [])"
+              :key="idx"
+              size="small"
+              style="margin-right: 4px"
+            >
+              {{ tag }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="publishStatus" label="发布" width="110">
           <template #default="{ row }">
             <el-tag :type="row.publishStatus === 1 ? 'success' : 'info'">
@@ -76,7 +87,7 @@
             <el-input v-model="form.title" />
           </el-form-item>
           <el-form-item label="标签" prop="tags">
-            <el-input v-model="form.tags" placeholder="tag1,tag2" />
+            <el-input-tag v-model="form.tags" placeholder="输入标签，按回车确认" />
           </el-form-item>
           <el-form-item label="时间" prop="time">
             <el-date-picker
@@ -93,10 +104,55 @@
             <el-input v-model="form.location" />
           </el-form-item>
           <el-form-item label="封面URL" prop="coverUrl">
-            <el-input v-model="form.coverUrl" placeholder="https://..." />
+            <div class="cover-uploader">
+              <el-upload
+                :http-request="customUpload"
+                :show-file-list="false"
+                accept="image/*"
+              >
+                <el-button type="primary" plain :icon="Upload"
+                  >上传图片</el-button
+                >
+              </el-upload>
+              <el-progress
+                v-if="progressVisible"
+                :percentage="progress"
+                style="max-width: 260px"
+              />
+              <div class="cover-preview" v-if="form.coverUrl">
+                <el-image
+                  :src="form.coverUrl"
+                  fit="cover"
+                  style="width: 180px; height: 100px; border-radius: 8px"
+                  preview-teleported
+                  :preview-src-list="[form.coverUrl]"
+                />
+                <el-button
+                  text
+                  type="danger"
+                  :icon="Delete"
+                  @click="form.coverUrl = ''"
+                  >移除</el-button
+                >
+              </div>
+            </div>
           </el-form-item>
           <el-form-item label="内容HTML" prop="contentHtml">
-            <el-input v-model="form.contentHtml" type="textarea" :rows="10" />
+            <div style="border: 1px solid #ccc; width: 100%">
+              <Toolbar
+                style="border-bottom: 1px solid #ccc"
+                :editor="editorRef"
+                :defaultConfig="toolbarConfig"
+                :mode="mode"
+              />
+              <Editor
+                style="height: 500px; overflow-y: hidden"
+                v-model="form.contentHtml"
+                :defaultConfig="editorConfig"
+                :mode="mode"
+                @onCreated="handleCreated"
+              />
+            </div>
           </el-form-item>
           <el-form-item label="启用" prop="enableStatus">
             <el-switch v-model="enableSwitch" />
@@ -113,9 +169,28 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Check, Close, Delete, Edit, Plus, Promotion, Refresh, Search } from '@element-plus/icons-vue'
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  shallowRef,
+} from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import {
+  Check,
+  Close,
+  Delete,
+  Edit,
+  Plus,
+  Promotion,
+  Refresh,
+  Search,
+  Upload,
+} from "@element-plus/icons-vue";
+import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
+import "@wangeditor/editor/dist/css/style.css";
 import {
   createAdminStudioNews,
   deleteAdminStudioNews,
@@ -123,7 +198,8 @@ import {
   setAdminStudioNewsEnableStatus,
   setAdminStudioNewsPublishStatus,
   updateAdminStudioNews,
-} from '@/api/admin'
+  uploadAdminImage,
+} from "@/api/admin";
 
 const loading = ref(false)
 const saving = ref(false)
@@ -133,9 +209,50 @@ const records = ref([])
 
 const page = ref(1)
 const size = ref(10)
-const filters = reactive({ keyword: '', tags: '' })
+const filters = reactive({ keyword: "", tags: "" });
 
-const dialogVisible = ref(false)
+const progressVisible = ref(false);
+const progress = ref(0);
+
+// Editor
+const editorRef = shallowRef();
+const mode = "default";
+const toolbarConfig = {
+  excludeKeys: ["group-video"],
+};
+const editorConfig = {
+  placeholder: "请输入内容...",
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file, insertFn) {
+        try {
+          const res = await uploadAdminImage(file);
+          const url = res.data?.data?.url;
+          if (url) {
+            insertFn(url, "image", url);
+          } else {
+            ElMessage.error("图片上传失败");
+          }
+        } catch (e) {
+          console.error(e);
+          ElMessage.error("图片上传出错");
+        }
+      },
+    },
+  },
+};
+
+const handleCreated = (editor) => {
+  editorRef.value = editor;
+};
+
+onBeforeUnmount(() => {
+  const editor = editorRef.value;
+  if (editor == null) return;
+  editor.destroy();
+});
+
+const dialogVisible = ref(false);
 const dialogMode = ref('create')
 const editingId = ref(null)
 
@@ -144,7 +261,7 @@ const dialogTitle = computed(() => (dialogMode.value === 'create' ? '发布动�
 const formRef = ref(null)
 const form = reactive({
   title: '',
-  tags: '',
+  tags: [],
   time: [],
   location: '',
   coverUrl: '',
@@ -168,7 +285,7 @@ const rules = {
 
 function resetForm() {
   form.title = ''
-  form.tags = ''
+  form.tags = []
   form.time = []
   form.location = ''
   form.coverUrl = ''
@@ -204,7 +321,7 @@ function openEdit(row) {
   dialogMode.value = 'edit'
   editingId.value = row.id
   form.title = row.title || ''
-  form.tags = row.tags || ''
+  form.tags = row.tags ? row.tags.split(',').filter(Boolean) : []
   form.time = [row.startTime, row.endTime].filter(Boolean)
   form.location = row.location || ''
   form.coverUrl = row.coverUrl || ''
@@ -221,7 +338,7 @@ async function submit() {
     try {
       const payload = {
         title: form.title,
-        tags: form.tags,
+        tags: Array.isArray(form.tags) ? form.tags.join(',') : '',
         startTime: form.time?.[0] || null,
         endTime: form.time?.[1] || null,
         location: form.location,
@@ -268,6 +385,33 @@ async function removeRow(row) {
   await fetchPage()
 }
 
+async function customUpload(options) {
+  const file = options.file;
+  progressVisible.value = true;
+  progress.value = 0;
+
+  try {
+    const res = await uploadAdminImage(file, (p) => {
+      progress.value = p;
+    });
+
+    const url = res.data?.data?.url;
+    if (!url) {
+      ElMessage.error("上传失败：未返回url");
+      options.onError(new Error("missing url"));
+      return;
+    }
+
+    form.coverUrl = url;
+    ElMessage.success("上传成功");
+    options.onSuccess(res);
+  } catch (e) {
+    options.onError(e);
+  } finally {
+    progressVisible.value = false;
+  }
+}
+
 onMounted(fetchPage)
 </script>
 
@@ -295,5 +439,14 @@ onMounted(fetchPage)
   display: flex;
   justify-content: flex-end;
   margin-top: 12px;
+}
+.cover-uploader {
+  display: grid;
+  gap: 10px;
+}
+.cover-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 </style>

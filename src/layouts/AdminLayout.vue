@@ -3,7 +3,11 @@
     <el-header class="admin-header">
       <div class="admin-header__left">
         <div class="admin-brand" @click="goDefault">
-          <span class="admin-brand__title">创新工作室管理系统</span>
+          <img src="@/static/appLogo.png" alt="Logo" class="admin-brand__logo" />
+          <div class="admin-brand__text">
+            <div class="admin-brand__main">重庆工业职业技术大学</div>
+            <div class="admin-brand__sub">成果转移转化创新工作室</div>
+          </div>
         </div>
       </div>
 
@@ -31,6 +35,11 @@
           router
           class="admin-menu"
         >
+          <el-menu-item index="/admin/account">
+            <el-icon><User /></el-icon>
+            <span>账号系统</span>
+          </el-menu-item>
+
           <el-menu-item index="/admin/banner">
             <el-icon><Picture /></el-icon>
             <span>轮播图</span>
@@ -44,11 +53,6 @@
           <el-menu-item index="/admin/news">
             <el-icon><Notification /></el-icon>
             <span>工作动态</span>
-          </el-menu-item>
-
-          <el-menu-item index="/admin/account">
-            <el-icon><User /></el-icon>
-            <span>账号系统</span>
           </el-menu-item>
 
           <el-menu-item index="/admin/topics">
@@ -131,11 +135,11 @@ function handleCommand(cmd) {
 }
 
 .admin-header {
-  height: 56px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 24px;
   background: #ffffff;
   border-bottom: 1px solid #ebeef5;
 }
@@ -143,13 +147,34 @@ function handleCommand(cmd) {
 .admin-brand {
   cursor: pointer;
   user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.admin-brand__title {
-  font-size: 16px;
+.admin-brand__logo {
+  height: 48px;
+  width: auto;
+}
+
+.admin-brand__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.admin-brand__main {
+  font-size: 18px;
   font-weight: 700;
   color: #1f2d3d;
-  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+.admin-brand__sub {
+  font-size: 12px;
+  color: #909399;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 .admin-user {
@@ -170,7 +195,7 @@ function handleCommand(cmd) {
 }
 
 .admin-body {
-  height: calc(100vh - 56px);
+  height: calc(100vh - 72px);
 }
 
 .admin-aside {

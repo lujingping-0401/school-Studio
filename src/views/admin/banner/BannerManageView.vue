@@ -76,11 +76,6 @@
       </el-table>
 
       <el-divider />
-      <div class="hint">
-        <el-text type="info"
-          >排序：这里提供“上移”快捷操作；如需拖拽排序，可在后续补充。</el-text
-        >
-      </div>
     </el-card>
 
     <el-dialog
