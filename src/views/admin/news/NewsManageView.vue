@@ -65,19 +65,21 @@
         </el-table-column>
       </el-table>
 
-      <div class="pager">
-        <el-pagination
-          background
-          layout="total, prev, pager, next, sizes"
-          :total="total"
-          :current-page="page"
-          :page-size="size"
-          :page-sizes="[10, 20, 50]"
-          @update:current-page="(p) => (page = p)"
-          @update:page-size="(s) => (size = s)"
-          @change="fetchPage"
-        />
-      </div>
+      <template #footer>
+        <div class="pager">
+          <el-pagination
+            background
+            layout="total, prev, pager, next, sizes"
+            :total="total"
+            :current-page="page"
+            :page-size="size"
+            :page-sizes="[10, 20, 50]"
+            @update:current-page="(p) => (page = p)"
+            @update:page-size="(s) => (size = s)"
+            @change="fetchPage"
+          />
+        </div>
+      </template>
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="820px" destroy-on-close align-center top="5vh">

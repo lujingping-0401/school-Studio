@@ -14,13 +14,6 @@
       />
 
       <el-divider />
-
-      <el-card shadow="never">
-        <template #header>
-          <div class="sub-title">占位：用户管理</div>
-        </template>
-        <el-text type="info">如你们有 Account 的 OpenAPI，我可以把这里补齐为完整的用户 CRUD + 角色管理。</el-text>
-      </el-card>
     </el-card>
   </div>
 </template>

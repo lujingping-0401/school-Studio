@@ -21,13 +21,25 @@
       <div class="toolbar">
         <el-input v-model="filters.keyword" placeholder="关键词" clearable style="max-width: 260px" />
         <el-input v-model="filters.tags" placeholder="标签(逗号分隔)" clearable style="max-width: 260px" />
-        <el-input v-model="filters.topicId" placeholder="主题ID" clearable style="max-width: 180px" />
+        <el-select
+          v-model="filters.topicId"
+          placeholder="按主题筛选"
+          clearable
+          filterable
+          style="max-width: 220px"
+        >
+          <el-option v-for="t in topics" :key="t.id" :label="t.name" :value="t.id" />
+        </el-select>
         <el-button type="primary" plain :icon="Search" @click="fetchPage">查询</el-button>
       </div>
 
       <el-table :data="records" v-loading="loading" style="width: 100%">
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="topicId" label="主题" width="100" />
+        <el-table-column label="主题" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ topicNameById(row.topicId) }}
+          </template>
+        </el-table-column>
         <el-table-column prop="title" label="标题" min-width="260" show-overflow-tooltip />
         <el-table-column prop="tags" label="标签" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
@@ -60,25 +72,35 @@
         </el-table-column>
       </el-table>
 
-      <div class="pager">
-        <el-pagination
-          background
-          layout="total, prev, pager, next, sizes"
-          :total="total"
-          :current-page="page"
-          :page-size="size"
-          :page-sizes="[10, 20, 50]"
-          @update:current-page="(p) => (page = p)"
-          @update:page-size="(s) => (size = s)"
-          @change="fetchPage"
-        />
-      </div>
+      <template #footer>
+        <div class="pager">
+          <el-pagination
+            background
+            layout="total, prev, pager, next, sizes"
+            :total="total"
+            :current-page="page"
+            :page-size="size"
+            :page-sizes="[10, 20, 50]"
+            @update:current-page="(p) => (page = p)"
+            @update:page-size="(s) => (size = s)"
+            @change="fetchPage"
+          />
+        </div>
+      </template>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="860px" destroy-on-close align-center>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
-        <el-form-item label="主题ID" prop="topicId">
-          <el-input-number v-model="form.topicId" :min="1" :step="1" />
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="860px" destroy-on-close align-center top="5vh">
+      <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px">
+        <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
+        <el-form-item label="主题" prop="topicId">
+          <el-select v-model="form.topicId" placeholder="请选择主题" style="width: 100%" filterable>
+            <el-option
+              v-for="t in topics"
+              :key="t.id"
+              :label="t.name"
+              :value="t.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="标题" prop="title">
           <el-input v-model="form.title" />
@@ -121,12 +143,27 @@
             </div>
           </el-form-item>
         <el-form-item label="内容HTML" prop="contentHtml">
-          <el-input v-model="form.contentHtml" type="textarea" :rows="12" />
+          <div style="border: 1px solid #ccc; width: 100%">
+            <Toolbar
+              style="border-bottom: 1px solid #ccc"
+              :editor="editorRef"
+              :defaultConfig="toolbarConfig"
+              :mode="mode"
+            />
+            <Editor
+              style="height: 500px; overflow-y: hidden"
+              v-model="form.contentHtml"
+              :defaultConfig="editorConfig"
+              :mode="mode"
+              @onCreated="handleCreated"
+            />
+          </div>
         </el-form-item>
         <el-form-item label="启用" prop="enableStatus">
           <el-switch v-model="enableSwitch" />
         </el-form-item>
       </el-form>
+      </div>
 
       <template #footer>
         <el-button plain :icon="Close" @click="dialogVisible = false">取消</el-button>
@@ -137,7 +174,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Check,
@@ -150,10 +187,13 @@ import {
   Search,
   Upload,
 } from "@element-plus/icons-vue";
+import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
+import "@wangeditor/editor/dist/css/style.css";
 import {
   createAdminIeArticle,
   deleteAdminIeArticle,
   getAdminIeArticlesPage,
+  getAdminIeTopics,
   setAdminIeArticlePublishStatus,
   updateAdminIeArticle,
   uploadAdminImage,
@@ -165,12 +205,62 @@ const saving = ref(false)
 const progressVisible = ref(false);
 const progress = ref(0);
 
+const topics = ref([]);
+
+async function fetchTopics() {
+  const res = await getAdminIeTopics();
+  topics.value = Array.isArray(res.data?.data) ? res.data.data : [];
+}
+
+function topicNameById(id) {
+  const item = topics.value.find((t) => Number(t.id) === Number(id))
+  return item?.name || '-'
+}
+
 const total = ref(0)
 const records = ref([])
 
 const page = ref(1)
 const size = ref(10)
 const filters = reactive({ keyword: '', tags: '', topicId: '' })
+
+// Editor
+const editorRef = shallowRef()
+const mode = 'default'
+const toolbarConfig = {
+  excludeKeys: ['group-video'],
+}
+const editorConfig = {
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file, insertFn) {
+        try {
+          const res = await uploadAdminImage(file)
+          const url = res.data?.data?.url
+          if (url) {
+            insertFn(url, 'image', url)
+          } else {
+            ElMessage.error('图片上传失败')
+          }
+        } catch (e) {
+          console.error(e)
+          ElMessage.error('图片上传出错')
+        }
+      },
+    },
+  },
+}
+
+const handleCreated = (editor) => {
+  editorRef.value = editor
+}
+
+onBeforeUnmount(() => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
+})
 
 const dialogVisible = ref(false)
 const dialogMode = ref('create')
@@ -198,7 +288,7 @@ const enableSwitch = computed({
 })
 
 const rules = {
-  topicId: [{ required: true, message: '请填写主题ID', trigger: 'change' }],
+  topicId: [{ required: true, message: '请选择主题', trigger: 'change' }],
   title: [{ required: true, message: '请填写标题', trigger: 'blur' }],
   contentHtml: [{ required: true, message: '请填写内容', trigger: 'blur' }],
 }
@@ -322,7 +412,10 @@ async function customUpload(options) {
   }
 }
 
-onMounted(fetchPage)
+onMounted(async () => {
+  await fetchTopics();
+  await fetchPage();
+})
 </script>
 
 <style scoped>
