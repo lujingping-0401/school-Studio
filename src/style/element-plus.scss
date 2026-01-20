@@ -1,10 +1,10 @@
-@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+@forward "element-plus/theme-chalk/src/common/var.scss" with (
   $border-radius: (
-    'base': 10px,
-    'small': 8px,
-    'round': 24px,
-    'circle': 100%
+    "base": 10px,
+    "small": 8px,
+    "round": 24px,
+    "circle": 100%,
   )
 );
 
-@use 'element-plus/theme-chalk/src/index.scss' as *;
+@use "element-plus/theme-chalk/src/index.scss" as *;
