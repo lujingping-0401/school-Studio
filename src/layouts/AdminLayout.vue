@@ -3,7 +3,11 @@
     <el-header class="admin-header">
       <div class="admin-header__left">
         <div class="admin-brand" @click="goDefault">
-          <img src="@/static/appLogo.png" alt="Logo" class="admin-brand__logo" />
+          <img
+            src="@/static/appLogo.png"
+            alt="Logo"
+            class="admin-brand__logo"
+          />
           <div class="admin-brand__text">
             <div class="admin-brand__main">重庆工业职业技术大学</div>
             <div class="admin-brand__sub">成果转移转化创新工作室</div>
@@ -210,7 +214,7 @@ function handleCommand(cmd) {
 }
 
 .admin-main {
-  padding: 16px;
+  padding: 10px;
   height: 100%;
   overflow: auto;
 }

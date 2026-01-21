@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <el-card shadow="never" class="page-card">
+    <CommonCard shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">首页轮播图</div>
@@ -76,7 +76,7 @@
       </el-table>
 
       <el-divider />
-    </el-card>
+    </CommonCard>
 
     <el-dialog
       v-model="dialogVisible"

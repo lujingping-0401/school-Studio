@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <el-card shadow="never" class="page-card">
+    <CommonCard shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">账号管理</div>
@@ -153,7 +153,7 @@
           />
         </div>
       </template>
-    </el-card>
+    </CommonCard>
 
     <!-- 编辑弹窗 -->
     <el-dialog
@@ -222,7 +222,11 @@
       </el-form>
       <template #footer>
         <el-button @click="pwdVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitResetPwd"
+        <el-button
+          type="primary"
+          :loading="saving"
+          plain
+          @click="submitResetPwd"
           >确认重置</el-button
         >
       </template>

@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <el-card shadow="never" class="page-card">
+    <CommonCard shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">工作室简介</div>
@@ -34,7 +34,8 @@
               <h2>{{ currentProfile.title }}</h2>
               <div class="meta">
                 <span class="time"
-                  >更新时间: {{ formatDateTime(currentProfile.updatedAt) }}</span
+                  >更新时间:
+                  {{ formatDateTime(currentProfile.updatedAt) }}</span
                 >
               </div>
             </div>
@@ -50,7 +51,7 @@
 
         <el-empty v-else description="暂无简介数据" />
       </div>
-    </el-card>
+    </CommonCard>
 
     <el-dialog
       v-model="dialogVisible"

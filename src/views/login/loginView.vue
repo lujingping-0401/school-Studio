@@ -65,59 +65,59 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { User, Lock, School } from '@element-plus/icons-vue'
-import { useUserStore } from '@/stores/user'
-import { adminLogin } from '@/api/admin'
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { User, Lock, School } from "@element-plus/icons-vue";
+import { useUserStore } from "@/stores/user";
+import { adminLogin } from "@/api/admin";
 
-const router = useRouter()
-const userStore = useUserStore()
+const router = useRouter();
+const userStore = useUserStore();
 
-const loginFormRef = ref(null)
-const loading = ref(false)
-const rememberMe = ref(false)
+const loginFormRef = ref(null);
+const loading = ref(false);
+const rememberMe = ref(false);
 
 const loginForm = reactive({
-  username: '',
-  password: '',
-})
+  username: "",
+  password: "",
+});
 
 const loginRules = {
-  username: [{ required: true, message: '请填写账号', trigger: 'blur' }],
-  password: [{ required: true, message: '请填写密码', trigger: 'blur' }],
-}
+  username: [{ required: true, message: "请填写账号", trigger: "blur" }],
+  password: [{ required: true, message: "请填写密码", trigger: "blur" }],
+};
 
 const handleLogin = async () => {
-  if (!loginFormRef.value) return
+  if (!loginFormRef.value) return;
 
   await loginFormRef.value.validate(async (valid) => {
-    if (!valid) return
+    if (!valid) return;
 
-    loading.value = true
+    loading.value = true;
     try {
       const res = await adminLogin({
         username: loginForm.username,
         password: loginForm.password,
-      })
+      });
 
-      const token = res.data?.data?.token
+      const token = res.data?.data?.token;
       if (!token) {
-        ElMessage.error(res.data?.message || '登录失败')
-        return
+        ElMessage.error(res.data?.message || "登录失败");
+        return;
       }
 
       userStore.setToken(token, {
-        storage: rememberMe.value ? 'local' : 'session',
-      })
-      ElMessage.success('欢迎回来')
-      router.push('/admin')
+        storage: rememberMe.value ? "local" : "session",
+      });
+      ElMessage.success("欢迎回来");
+      router.push("/admin");
     } finally {
-      loading.value = false
+      loading.value = false;
     }
-  })
-}
+  });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -127,17 +127,21 @@ const handleLogin = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('@/static/bgImg.png') no-repeat center center;
+  background: url("@/static/bgImg.png") no-repeat center center;
   background-size: cover;
   position: relative;
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     // 使用微弱的蓝色渐变替代纯灰色遮罩
-    background: radial-gradient(circle at center, rgba(64, 158, 255, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+    background: radial-gradient(
+      circle at center,
+      rgba(64, 158, 255, 0.05) 0%,
+      rgba(0, 0, 0, 0) 100%
+    );
     backdrop-filter: blur(4px);
   }
 }
@@ -179,7 +183,7 @@ const handleLogin = async () => {
     .divider {
       width: 40px;
       height: 4px;
-      background: #409EFF;
+      background: #409eff;
       margin: 12px auto;
       border-radius: 2px;
     }
@@ -220,10 +224,10 @@ const handleLogin = async () => {
     font-size: 16px;
     font-weight: 600;
     border-radius: 10px;
-    background: #409EFF;
+    background: #409eff;
     border: none;
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-    
+
     &:hover {
       background: #66b1ff;
       box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
@@ -250,4 +254,3 @@ const handleLogin = async () => {
   }
 }
 </style>
-

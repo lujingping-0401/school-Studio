@@ -19,3 +19,29 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Custom Slim Scrollbar */
+::-webkit_scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit_scrollbar-track {
+  background: transparent;
+}
+
+::-webkit_scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+::-webkit_scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}

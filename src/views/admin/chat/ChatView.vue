@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <el-card shadow="never" class="page-card">
+    <CommonCard shadow="never" class="page-card">
       <template #header>
         <div class="page-header">
           <div class="page-title">在线咨询与实时聊天</div>
@@ -15,8 +15,10 @@
 
       <el-divider />
 
-      <el-text type="info">待补充：会话列表、消息记录、WebSocket 实时通信、管理员回复。</el-text>
-    </el-card>
+      <el-text type="info"
+        >待补充：会话列表、消息记录、WebSocket 实时通信、管理员回复。</el-text
+      >
+    </CommonCard>
   </div>
 </template>
 
