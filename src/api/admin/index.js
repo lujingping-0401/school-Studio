@@ -6,3 +6,4 @@ export * from "./topicApi";
 export * from "./articleApi";
 export * from "./fileApi";
 export * from "./sysUserApi";
+export * from "./chatApi";

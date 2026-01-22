@@ -1,6 +1,10 @@
 <template>
   <div class="page">
-    <CommonCard shadow="never" class="page-card">
+    <CommonCard
+      shadow="never"
+      class="page-card"
+      body-style="overflow-y: auto; height: 100%;"
+    >
       <template #header>
         <div class="page-header">
           <div class="page-title">工作室简介</div>
@@ -31,8 +35,10 @@
               :preview-src-list="[currentProfile.coverUrl]"
             />
             <div class="profile-info">
-              <h2>{{ currentProfile.title }}</h2>
-              <div class="meta">
+              <div class="profile-title-row">
+                <h2>{{ currentProfile.title }}</h2>
+              </div>
+              <div class="profile-meta">
                 <span class="time"
                   >更新时间:
                   {{ formatDateTime(currentProfile.updatedAt) }}</span
@@ -41,12 +47,111 @@
             </div>
           </div>
 
-          <el-divider content-position="left">简介内容</el-divider>
+          <div class="profile-sections">
+            <!-- 核心详情 -->
+            <section class="info-section">
+              <el-divider content-position="left">简介内容</el-divider>
+              <div
+                class="profile-content ql-snow"
+                v-html="currentProfile.contentHtml"
+              ></div>
+            </section>
 
-          <div
-            class="profile-content ql-snow"
-            v-html="currentProfile.contentHtml"
-          ></div>
+            <!-- 详细资料网格 -->
+            <el-row :gutter="24" class="metadata-grid">
+              <el-col :span="12">
+                <section class="info-section">
+                  <el-divider content-position="left">领衔人信息</el-divider>
+                  <div class="info-card">
+                    <div class="side-item">
+                      <div class="side-label">领衔人</div>
+                      <div class="side-value">
+                        {{ currentProfile.leaderName || "未设置" }}
+                      </div>
+                    </div>
+                    <div class="side-item">
+                      <div class="side-label">领衔人介绍</div>
+                      <div class="side-value intro-text">
+                        {{ currentProfile.leaderIntro || "未设置" }}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </el-col>
+              <el-col :span="12">
+                <section class="info-section">
+                  <el-divider content-position="left">核心功能</el-divider>
+                  <div class="info-card tag-group">
+                    <el-tag
+                      v-for="item in (currentProfile.coreFunctions || '')
+                        .split(',')
+                        .filter((i) => i)"
+                      :key="item"
+                      class="m-1"
+                    >
+                      {{ item }}
+                    </el-tag>
+                    <span
+                      v-if="!currentProfile.coreFunctions"
+                      class="empty-text"
+                      >未设置</span
+                    >
+                  </div>
+                </section>
+                <section class="info-section" style="margin-top: 24px">
+                  <el-divider content-position="left">组织架构</el-divider>
+                  <div class="info-card tag-group">
+                    <el-tag
+                      v-for="item in tryParse(currentProfile.orgStructure)"
+                      :key="item"
+                      type="success"
+                      class="m-1"
+                    >
+                      {{ item }}
+                    </el-tag>
+                    <span
+                      v-if="!tryParse(currentProfile.orgStructure).length"
+                      class="empty-text"
+                      >未设置</span
+                    >
+                  </div>
+                </section>
+              </el-col>
+            </el-row>
+
+            <!-- 联系方式 -->
+            <section class="info-section">
+              <el-divider content-position="left">联系我们</el-divider>
+              <div class="contact-grid">
+                <div
+                  v-for="(contact, index) in tryParse(currentProfile.contactUs)"
+                  :key="index"
+                  class="contact-card"
+                >
+                  <div class="contact-role">
+                    <el-icon><CollectionTag /></el-icon>
+                    {{ contact.distraction || "-" }}
+                  </div>
+                  <div class="contact-details">
+                    <div class="detail-row">
+                      <el-icon><User /></el-icon>
+                      <span class="name">{{ contact.name }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <el-icon><Phone /></el-icon>
+                      <span class="phone">{{ contact.phone }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  v-if="!tryParse(currentProfile.contactUs).length"
+                  class="empty-text"
+                >
+                  未设置
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
 
         <el-empty v-else description="暂无简介数据" />
@@ -64,9 +169,106 @@
       <div style="max-height: 70vh; overflow-y: auto; padding-right: 10px">
         <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
           <el-form-item label="标题" prop="title">
-            <el-input v-model="form.title" />
+            <el-input v-model="form.title" placeholder="请输入页面标题" />
           </el-form-item>
-          <el-form-item label="封面URL" prop="coverUrl">
+
+          <el-row :gutter="20">
+            <el-col :span="24">
+              <el-form-item label="领衔人" prop="leaderName">
+                <el-input v-model="form.leaderName" placeholder="领衔人姓名" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-form-item label="领衔人介绍" prop="leaderIntro">
+            <el-input
+              v-model="form.leaderIntro"
+              type="textarea"
+              :rows="3"
+              placeholder="领衔人简介"
+            />
+          </el-form-item>
+
+          <el-form-item label="核心功能" prop="coreFunctions">
+            <el-input
+              v-model="form.coreFunctions"
+              placeholder="输入功能，多个请用英文逗号(,)分隔"
+            />
+          </el-form-item>
+
+          <el-form-item label="组织架构" prop="orgStructure">
+            <div class="tag-input-group">
+              <el-tag
+                v-for="tag in form.orgStructure"
+                :key="tag"
+                closable
+                @close="removeOrgTag(tag)"
+                class="m-1"
+              >
+                {{ tag }}
+              </el-tag>
+              <el-input
+                v-if="tagInputVisible"
+                ref="tagInputRef"
+                v-model="tagInputValue"
+                size="small"
+                style="width: 100px"
+                @keyup.enter="handleTagInputConfirm"
+                @blur="handleTagInputConfirm"
+              />
+              <el-button v-else size="small" @click="showTagInput"
+                >+ 添加架构</el-button
+              >
+            </div>
+          </el-form-item>
+
+          <el-form-item label="联系人" prop="contactUs">
+            <div class="contact-form-list">
+              <div
+                v-for="(item, index) in form.contactUs"
+                :key="index"
+                class="contact-form-item"
+              >
+                <el-row :gutter="10">
+                  <el-col :span="7">
+                    <el-input
+                      v-model="item.name"
+                      placeholder="姓名"
+                      size="small"
+                    />
+                  </el-col>
+                  <el-col :span="8">
+                    <el-input
+                      v-model="item.phone"
+                      placeholder="电话"
+                      size="small"
+                    />
+                  </el-col>
+                  <el-col :span="7">
+                    <el-input
+                      v-model="item.distraction"
+                      placeholder="职位/说明"
+                      size="small"
+                    />
+                  </el-col>
+                  <el-col :span="2">
+                    <el-button
+                      type="danger"
+                      :icon="Close"
+                      circle
+                      size="small"
+                      @click="removeContact(index)"
+                    />
+                  </el-col>
+                </el-row>
+              </div>
+              <el-button type="primary" plain size="small" @click="addContact"
+                >+ 添加联系人</el-button
+              >
+            </div>
+          </el-form-item>
+
+          <el-form-item label="封面图" prop="coverUrl">
             <div class="cover-uploader">
               <el-upload
                 :http-request="customUploadCover"
@@ -86,7 +288,12 @@
                 <el-image
                   :src="form.coverUrl"
                   fit="cover"
-                  style="width: 120px; height: 68px; border-radius: 6px"
+                  style="
+                    width: 120px;
+                    height: 68px;
+                    border-radius: 6px;
+                    border: 1px solid #dcdfe6;
+                  "
                 />
                 <el-button text type="danger" @click="form.coverUrl = ''"
                   >移除</el-button
@@ -94,11 +301,15 @@
               </div>
             </div>
           </el-form-item>
-          <el-form-item label="启用" prop="enableStatus">
-            <el-switch v-model="enableSwitch" />
-          </el-form-item>
-          <el-form-item label="内容" prop="contentHtml">
-            <div style="border: 1px solid #ccc; width: 100%">
+          <el-form-item label="内容简介" prop="contentHtml">
+            <div
+              style="
+                border: 1px solid #ccc;
+                width: 100%;
+                border-radius: 4px;
+                overflow: hidden;
+              "
+            >
               <Toolbar
                 style="border-bottom: 1px solid #ccc"
                 :editor="editorRef"
@@ -106,7 +317,7 @@
                 :mode="mode"
               />
               <Editor
-                style="height: 500px; overflow-y: hidden"
+                style="height: 400px; overflow-y: hidden"
                 v-model="form.contentHtml"
                 :defaultConfig="editorConfig"
                 :mode="mode"
@@ -144,7 +355,16 @@ import {
   shallowRef,
 } from "vue";
 import { ElMessage } from "element-plus";
-import { Check, Close, Edit, Refresh, Upload } from "@element-plus/icons-vue";
+import {
+  Check,
+  Close,
+  Edit,
+  Refresh,
+  Upload,
+  User,
+  Phone,
+  CollectionTag,
+} from "@element-plus/icons-vue";
 import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
 import "@wangeditor/editor/dist/css/style.css";
 import {
@@ -165,7 +385,58 @@ const form = reactive({
   coverUrl: "",
   contentHtml: "",
   enableStatus: 1,
+  leaderName: "",
+  leaderIntro: "",
+  orgStructure: [],
+  coreFunctions: "",
+  contactUs: [],
 });
+
+// Tag Input for orgStructure
+const tagInputVisible = ref(false);
+const tagInputValue = ref("");
+const tagInputRef = ref(null);
+
+const showTagInput = () => {
+  tagInputVisible.value = true;
+  nextTick(() => {
+    tagInputRef.value?.focus();
+  });
+};
+
+const handleTagInputConfirm = () => {
+  if (tagInputValue.value) {
+    if (!form.orgStructure.includes(tagInputValue.value)) {
+      form.orgStructure.push(tagInputValue.value);
+    }
+  }
+  tagInputVisible.value = false;
+  tagInputValue.value = "";
+};
+
+const removeOrgTag = (tag) => {
+  form.orgStructure = form.orgStructure.filter((t) => t !== tag);
+};
+
+// Contact management
+const addContact = () => {
+  form.contactUs.push({ name: "", phone: "", distraction: "" });
+};
+
+const removeContact = (index) => {
+  form.contactUs.splice(index, 1);
+};
+
+const tryParse = (str) => {
+  if (!str) return [];
+  try {
+    const parsed = typeof str === "string" ? JSON.parse(str) : str;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Parse error:", e);
+    return [];
+  }
+};
 
 // Cover Upload
 const coverProgressVisible = ref(false);
@@ -229,15 +500,7 @@ onBeforeUnmount(() => {
   editor.destroy();
 });
 
-const enableSwitch = computed({
-  get() {
-    return form.enableStatus === 1;
-  },
-  set(v) {
-    form.enableStatus = v ? 1 : 0;
-  },
-});
-
+// Rules
 const rules = {
   title: [{ required: true, message: "请填写标题", trigger: "blur" }],
   contentHtml: [{ required: true, message: "请填写内容", trigger: "blur" }],
@@ -265,11 +528,21 @@ function openOverwrite() {
     form.coverUrl = currentProfile.value.coverUrl || "";
     form.contentHtml = currentProfile.value.contentHtml || "";
     form.enableStatus = currentProfile.value.enableStatus ?? 1;
+    form.leaderName = currentProfile.value.leaderName || "";
+    form.leaderIntro = currentProfile.value.leaderIntro || "";
+    form.coreFunctions = currentProfile.value.coreFunctions || "";
+    form.orgStructure = tryParse(currentProfile.value.orgStructure);
+    form.contactUs = tryParse(currentProfile.value.contactUs);
   } else {
     form.title = "";
     form.coverUrl = "";
     form.contentHtml = "";
     form.enableStatus = 1;
+    form.leaderName = "";
+    form.leaderIntro = "";
+    form.coreFunctions = "";
+    form.orgStructure = [];
+    form.contactUs = [];
   }
   dialogVisible.value = true;
 }
@@ -285,6 +558,11 @@ async function submit() {
         coverUrl: form.coverUrl,
         contentHtml: form.contentHtml,
         enableStatus: form.enableStatus,
+        leaderName: form.leaderName,
+        leaderIntro: form.leaderIntro,
+        coreFunctions: form.coreFunctions,
+        orgStructure: JSON.stringify(form.orgStructure),
+        contactUs: JSON.stringify(form.contactUs),
       });
       ElMessage.success("已提交");
       dialogVisible.value = false;
@@ -307,25 +585,38 @@ onMounted(fetchList);
 }
 .page-title {
   font-weight: 700;
+  font-size: 18px;
 }
 .page-actions {
   display: inline-flex;
   gap: 8px;
 }
 .profile-detail {
-  padding: 0 20px;
+  padding: 0 10px 20px;
 }
 .profile-header {
   display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
+  gap: 32px;
+  margin-bottom: 32px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%);
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f0f3f8;
+}
+.profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 .profile-cover {
-  width: 240px;
-  height: 135px;
-  border-radius: 8px;
+  width: 280px;
+  height: 157px;
+  border-radius: 12px;
   border: 1px solid #ebeef5;
   flex-shrink: 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 .profile-info {
   flex: 1;
@@ -334,36 +625,173 @@ onMounted(fetchList);
   justify-content: center;
 }
 .profile-info h2 {
-  margin: 0 0 12px 0;
-  font-size: 24px;
-  color: #303133;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
 }
-.meta {
+.profile-meta {
+  color: #909399;
+  font-size: 14px;
+}
+
+.profile-sections {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.info-section {
+  background: #fff;
+}
+
+.info-card {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #edf2f7;
+  height: 100%;
+}
+
+.side-item {
+  margin-bottom: 20px;
+}
+.side-item:last-child {
+  margin-bottom: 0;
+}
+.side-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #a0aec0;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.side-value {
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 16px;
+}
+.intro-text {
+  font-weight: 400;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: #4a5568;
+}
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
-.time {
-  color: #909399;
+
+.contact-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #f0f3f8;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.contact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+  border-color: var(--el-color-primary-light-5);
+}
+
+.contact-role {
+  background: #f8fafc;
+  padding: 10px 16px;
   font-size: 13px;
+  font-weight: 600;
+  color: var(--el-color-primary);
+  border-bottom: 1px solid #f0f3f8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contact-details {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.detail-row .el-icon {
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.detail-row .name {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.detail-row .phone {
+  color: var(--el-color-primary);
+  font-family: inherit;
+}
+.empty-text {
+  color: #c0c4cc;
+  font-size: 12px;
+  font-style: italic;
 }
 .profile-content {
-  line-height: 1.6;
-  color: #606266;
-  min-height: 200px;
+  line-height: 1.8;
+  color: #444;
+  padding: 10px;
 }
-/* WangEditor content style adjust */
 .profile-content :deep(img) {
   max-width: 100%;
+  border-radius: 8px;
+  margin: 10px 0;
 }
 .cover-uploader {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 .cover-preview {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+.m-1 {
+  margin: 4px;
+}
+.tag-input-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.contact-form-item {
+  background: #f8f9fb;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px dashed #dcdfe6;
+}
+.contact-form-list {
+  display: flex;
+  flex-direction: column;
 }
 </style>

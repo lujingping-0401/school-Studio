@@ -59,15 +59,20 @@
             <span>工作动态</span>
           </el-menu-item>
 
-          <el-menu-item index="/admin/topics">
-            <el-icon><Collection /></el-icon>
-            <span>产教融合主题</span>
-          </el-menu-item>
-
-          <el-menu-item index="/admin/articles">
-            <el-icon><Reading /></el-icon>
-            <span>产教融合文章</span>
-          </el-menu-item>
+          <el-sub-menu index="cooperation">
+            <template #title>
+              <el-icon><Collection /></el-icon>
+              <span>产教融合</span>
+            </template>
+            <el-menu-item index="/admin/topics">
+              <el-icon><Collection /></el-icon>
+              <span>主题管理</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/articles">
+              <el-icon><Reading /></el-icon>
+              <span>文章管理</span>
+            </el-menu-item>
+          </el-sub-menu>
 
           <el-menu-item index="/admin/chat">
             <el-icon><ChatDotRound /></el-icon>

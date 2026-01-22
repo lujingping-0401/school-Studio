@@ -8,8 +8,11 @@ import vueDevTools from "vite-plugin-vue-devtools";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueJsx(), vueDevTools()],
+  define: {
+    global: "window",
+  },
   server: {
-    port: 5173  ,
+    port: 5173,
     strictPort: true,
     host: true,
     proxy: {
@@ -17,9 +20,10 @@ export default defineConfig({
         target: "http://127.0.0.1:8080",
         changeOrigin: true,
         secure: false,
+        ws: true,
         rewrite: (path) => {
-          if (path.startsWith("/api/v1")) return path
-          return path.replace(/^\/api/, "/api/v1")
+          if (path.startsWith("/api/v1")) return path;
+          return path.replace(/^\/api/, "/api/v1");
         },
       },
     },
