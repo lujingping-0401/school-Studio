@@ -69,137 +69,165 @@
 
       <!-- 右侧：聊天窗口 -->
       <div class="chat-container">
-        <template v-if="currentSession">
-          <div class="chat-header">
-            <div class="header-user">
-              <el-avatar
-                :size="40"
-                :src="currentSession.wechatAvatar || defaultAvatar"
-              />
-              <div class="user-meta">
-                <div class="name">
-                  {{ currentSession.wechatNickname || "未知用户" }}
-                </div>
-              </div>
-            </div>
-            <div class="header-actions">
-              <el-button
-                v-if="currentSession.status !== 2"
-                type="danger"
-                plain
-                size="small"
-                :icon="CircleClose"
-                @click="handleCloseSession"
-                >结束会话</el-button
-              >
-            </div>
-          </div>
-
-          <div class="message-list" ref="messageListRef" @scroll="handleScroll">
-            <div v-if="hasMoreMessages" class="load-more">
-              <el-button
-                text
-                size="small"
-                :loading="loadingMessages"
-                @click="fetchMessages(true)"
-              >
-                加载历史消息
-              </el-button>
-            </div>
-
-            <template v-for="(msg, index) in messages" :key="msg.id">
-              <!-- 对话中间中心显示：每一小时分割一次 -->
-              <div v-if="shouldShowDivider(msg, index)" class="message-divider">
-                {{ formatTime(msg.sentAt, "YYYY-MM-DD HH:mm:ss") }}
-              </div>
-
-              <div
-                class="message-wrapper"
-                :class="{ 'is-me': msg.senderRole === 'ADMIN' }"
-              >
+        <AnimatePresence mode="wait">
+          <Motion
+            v-if="currentSession"
+            :key="currentSession.id"
+            as="div"
+            class="chat-main"
+            :initial="{ opacity: 0, x: 10 }"
+            :animate="{ opacity: 1, x: 0 }"
+            :exit="{ opacity: 0, x: -10 }"
+            :transition="{ duration: 0.2 }"
+          >
+            <div class="chat-header">
+              <div class="header-user">
                 <el-avatar
-                  class="msg-avatar"
-                  :size="36"
-                  :src="
-                    msg.senderRole === 'ADMIN'
-                      ? adminAvatar
-                      : currentSession.wechatAvatar || defaultAvatar
-                  "
+                  :size="40"
+                  :src="currentSession.wechatAvatar || defaultAvatar"
                 />
-                <div class="msg-content-box">
-                  <div class="msg-bubble">
-                    <template v-if="msg.msgType === 'TEXT'">
-                      {{ msg.content }}
-                    </template>
-                    <template v-else-if="msg.msgType === 'IMAGE'">
-                      <el-image
-                        :src="msg.content"
-                        :preview-src-list="[msg.content]"
-                        fit="cover"
-                        class="msg-image"
-                      />
-                    </template>
-                  </div>
-                  <!-- 气泡下方显示时间 时分秒 + 已读未读 -->
-                  <div class="msg-footer">
-                    <span class="msg-time">{{
-                      formatTime(msg.sentAt, "HH:mm:ss")
-                    }}</span>
-                    <span
-                      v-if="msg.senderRole === 'ADMIN'"
-                      class="read-status"
-                      :class="{ 'is-read': msg.readStatus === 1 }"
-                    >
-                      {{ msg.readStatus === 1 ? "已读" : "未读" }}
-                    </span>
+                <div class="user-meta">
+                  <div class="name">
+                    {{ currentSession.wechatNickname || "未知用户" }}
                   </div>
                 </div>
               </div>
-            </template>
-          </div>
-
-          <div class="chat-input" v-if="currentSession.status !== 2">
-            <div class="input-tools">
-              <el-upload
-                action="#"
-                :auto-upload="false"
-                :show-file-list="false"
-                accept="image/*"
-                @change="handleImageUpload"
-              >
-                <el-button :icon="Picture" circle plain />
-              </el-upload>
-            </div>
-            <div class="input-area">
-              <el-input
-                v-model="inputText"
-                type="textarea"
-                :rows="3"
-                resize="none"
-                placeholder="请输入回复内容..."
-                @keyup.enter.exact.prevent="handleSend"
-              />
-              <div class="input-footer">
-                <span class="hint">Enter 发送</span>
+              <div class="header-actions">
                 <el-button
-                  type="primary"
-                  :disabled="!inputText.trim()"
-                  @click="handleSend"
-                  >发送</el-button
+                  v-if="currentSession.status !== 2"
+                  type="danger"
+                  plain
+                  size="small"
+                  :icon="CircleClose"
+                  @click="handleCloseSession"
+                  >结束会话</el-button
                 >
               </div>
             </div>
-          </div>
-          <div class="session-closed-notice" v-else>该会话已结束</div>
-        </template>
-        <template v-else>
-          <div class="empty-chat">
+
+            <div
+              class="message-list"
+              ref="messageListRef"
+              @scroll="handleScroll"
+            >
+              <div v-if="loadingMessages && hasMoreMessages" class="load-more">
+                <el-icon class="is-loading"><Loading /></el-icon>
+              </div>
+
+              <AnimatePresence>
+                <template v-for="(msg, index) in messages" :key="msg.id">
+                  <!-- 对话中间中心显示：每一小时分割一次 -->
+                  <div
+                    v-if="shouldShowDivider(msg, index)"
+                    class="message-divider"
+                  >
+                    {{ formatTime(msg.sentAt, "YYYY-MM-DD HH:mm:ss") }}
+                  </div>
+
+                  <Motion
+                    as="div"
+                    class="message-wrapper"
+                    :class="{ 'is-me': msg.senderRole === 'ADMIN' }"
+                    :initial="{ opacity: 0, y: 15, scale: 0.98 }"
+                    :animate="{ opacity: 1, y: 0, scale: 1 }"
+                    :transition="{
+                      type: 'spring',
+                      damping: 25,
+                      stiffness: 400,
+                    }"
+                  >
+                    <el-avatar
+                      class="msg-avatar"
+                      :size="36"
+                      :src="
+                        msg.senderRole === 'ADMIN'
+                          ? adminAvatar
+                          : currentSession.wechatAvatar || defaultAvatar
+                      "
+                    />
+                    <div class="msg-content-box">
+                      <div class="msg-bubble">
+                        <template v-if="msg.msgType === 'TEXT'">
+                          {{ msg.content }}
+                        </template>
+                        <template v-else-if="msg.msgType === 'IMAGE'">
+                          <el-image
+                            :src="msg.content"
+                            :preview-src-list="[msg.content]"
+                            fit="cover"
+                            class="msg-image"
+                          />
+                        </template>
+                      </div>
+                      <!-- 气泡下方显示时间 时分秒 + 已读未读 -->
+                      <div class="msg-footer">
+                        <span class="msg-time">{{
+                          formatTime(msg.sentAt, "HH:mm:ss")
+                        }}</span>
+                        <span
+                          v-if="msg.senderRole === 'ADMIN'"
+                          class="read-status"
+                          :class="{ 'is-read': msg.readStatus === 1 }"
+                        >
+                          {{ msg.readStatus === 1 ? "已读" : "未读" }}
+                        </span>
+                      </div>
+                    </div>
+                  </Motion>
+                </template>
+              </AnimatePresence>
+            </div>
+
+            <div class="chat-input" v-if="currentSession.status !== 2">
+              <div class="input-tools">
+                <el-upload
+                  action="#"
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  accept="image/*"
+                  @change="handleImageUpload"
+                >
+                  <el-button :icon="Picture" circle plain />
+                </el-upload>
+              </div>
+              <div class="input-area">
+                <el-input
+                  v-model="inputText"
+                  type="textarea"
+                  :rows="3"
+                  resize="none"
+                  placeholder="请输入回复内容..."
+                  @keyup.enter.exact.prevent="handleSend"
+                />
+                <div class="input-footer">
+                  <span class="hint">Enter 发送</span>
+                  <el-button
+                    type="primary"
+                    :disabled="!inputText.trim()"
+                    @click="handleSend"
+                    >发送</el-button
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="session-closed-notice" v-else>该会话已结束</div>
+          </Motion>
+          <Motion
+            v-else
+            key="empty"
+            as="div"
+            class="empty-chat"
+            :initial="{ opacity: 0, scale: 0.95 }"
+            :animate="{ opacity: 1, scale: 1 }"
+            :exit="{ opacity: 0, scale: 0.95 }"
+            :transition="{ duration: 0.2 }"
+          >
             <div class="chat-placeholder">
               <el-icon :size="80"><ChatDotRound /></el-icon>
               <p>请选择左侧会话开始交流</p>
             </div>
-          </div>
-        </template>
+          </Motion>
+        </AnimatePresence>
       </div>
     </CommonCard>
   </div>
@@ -215,7 +243,13 @@ import {
   nextTick,
 } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Picture, CircleClose, ChatDotRound } from "@element-plus/icons-vue";
+import {
+  Picture,
+  CircleClose,
+  ChatDotRound,
+  Loading,
+} from "@element-plus/icons-vue";
+import { Motion, AnimatePresence, LayoutGroup } from "motion-v";
 import { useUserStore } from "@/stores/user";
 import {
   getAdminChatSessions,
@@ -270,7 +304,6 @@ const selectSession = async (session) => {
   if (currentSession.value?.id === session.id) return;
   currentSession.value = session;
   messages.value = [];
-  msgPage.value = 1;
   hasMoreMessages.value = true;
   await fetchMessages();
   scrollToBottom();
@@ -285,24 +318,26 @@ const selectSession = async (session) => {
 // --- 消息处理 ---
 const messages = ref([]);
 const loadingMessages = ref(false);
-const msgPage = ref(1);
 const hasMoreMessages = ref(true);
 const inputText = ref("");
 const messageListRef = ref(null);
 
 const fetchMessages = async (isMore = false) => {
   if (!currentSession.value) return;
-  if (isMore) msgPage.value++;
-
+  if (loadingMessages.value) return;
   loadingMessages.value = true;
   try {
-    const res = await getAdminChatMessages(currentSession.value.id, {
-      page: msgPage.value,
-      size: 20,
-    });
+    const params = { limit: 5 };
+    if (isMore && messages.value.length > 0) {
+      const oldestMsg = messages.value[0];
+      params.cursorSentAt = oldestMsg.sentAt;
+      params.cursorId = oldestMsg.id;
+    }
+
+    const res = await getAdminChatMessages(currentSession.value.id, params);
     const records = res.data?.data?.records || [];
 
-    if (records.length < 20) {
+    if (records.length < 5) {
       hasMoreMessages.value = false;
     }
 
@@ -396,7 +431,8 @@ const initWebSocket = () => {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
   // 前端通过 ws://<host>:<port>/api/v1/ws?token=<JWT> 认证
-  const wsUrl = `${protocol}//${host}/ws?token=${token}`;
+  // 生产环境可能没有 /api 前缀，但这里对应 vite.config.js 的代理
+  const wsUrl = `${protocol}//${host}/api/ws?token=${token}`;
 
   socket = new WebSocket(wsUrl);
 
@@ -406,8 +442,16 @@ const initWebSocket = () => {
 
   socket.onmessage = (event) => {
     try {
-      const msgData = JSON.parse(event.data);
-      handleIncomingMessage(msgData);
+      const data = JSON.parse(event.data);
+      // 处理包装后的消息结构
+      if (data.type === "CHAT_MESSAGE") {
+        handleIncomingMessage(data.payload);
+      } else if (data.type === "CHAT_READ") {
+        handleReadReceipt(data.payload);
+      } else if (data.id && data.sessionId) {
+        // 兼容旧的或未包装的格式
+        handleIncomingMessage(data);
+      }
     } catch (e) {
       console.error("解析消息失败", e);
     }
@@ -434,7 +478,9 @@ const handleIncomingMessage = (msg) => {
       messages.value.push(msg);
       scrollToBottom();
       // 自动标为已读
-      markAdminChatRead(msg.sessionId);
+      if (msg.senderRole === "USER") {
+        markAdminChatRead(msg.sessionId);
+      }
     }
   }
 
@@ -469,6 +515,27 @@ const handleIncomingMessage = (msg) => {
   }
 };
 
+const handleReadReceipt = (payload) => {
+  const { sessionId, readerRole, readAt } = payload;
+
+  // 如果是用户已读，我们需要将并没有读的消息(ADMIN发的)标记为已读
+  if (
+    currentSession.value &&
+    currentSession.value.id === sessionId &&
+    readerRole === "USER"
+  ) {
+    messages.value.forEach((msg) => {
+      // 找到所有 ADMIN 发送的，且发送时间早于等于 readAt 的消息，标记为已读
+      if (
+        msg.senderRole === "ADMIN" &&
+        new Date(msg.sentAt).getTime() <= new Date(readAt).getTime()
+      ) {
+        msg.readStatus = 1;
+      }
+    });
+  }
+};
+
 // --- 辅助方法 ---
 const scrollToBottom = () => {
   nextTick(() => {
@@ -479,7 +546,10 @@ const scrollToBottom = () => {
 };
 
 const handleScroll = (e) => {
-  // 可以在这里处理自动加载更多，目前已有点击加载
+  const el = e.target;
+  if (el.scrollTop === 0 && hasMoreMessages.value && !loadingMessages.value) {
+    fetchMessages(true);
+  }
 };
 
 const getStatusText = (status) => {
@@ -642,6 +712,13 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   background: #fff;
+
+  .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
   .chat-header {
     height: 64px;

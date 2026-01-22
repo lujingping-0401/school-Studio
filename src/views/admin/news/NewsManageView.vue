@@ -47,6 +47,12 @@
           show-overflow-tooltip
         />
         <el-table-column
+          prop="author"
+          label="作者"
+          width="120"
+          show-overflow-tooltip
+        />
+        <el-table-column
           prop="tags"
           label="标签"
           min-width="160"
@@ -133,6 +139,9 @@
         <el-form ref="formRef" :model="form" :rules="rules" label-width="96px">
           <el-form-item label="标题" prop="title">
             <el-input v-model="form.title" />
+          </el-form-item>
+          <el-form-item label="作者" prop="author">
+            <el-input v-model="form.author" />
           </el-form-item>
           <el-form-item label="标签" prop="tags">
             <el-input-tag
@@ -323,6 +332,7 @@ const dialogTitle = computed(() =>
 const formRef = ref(null);
 const form = reactive({
   title: "",
+  author: "",
   tags: [],
   time: [],
   location: "",
@@ -347,6 +357,7 @@ const rules = {
 
 function resetForm() {
   form.title = "";
+  form.author = "";
   form.tags = [];
   form.time = [];
   form.location = "";
@@ -383,6 +394,7 @@ function openEdit(row) {
   dialogMode.value = "edit";
   editingId.value = row.id;
   form.title = row.title || "";
+  form.author = row.author || "";
   form.tags = row.tags ? row.tags.split(",").filter(Boolean) : [];
   form.time = [row.startTime, row.endTime].filter(Boolean);
   form.location = row.location || "";
@@ -400,6 +412,7 @@ async function submit() {
     try {
       const payload = {
         title: form.title,
+        author: form.author,
         tags: Array.isArray(form.tags) ? form.tags.join(",") : "",
         startTime: form.time?.[0] || null,
         endTime: form.time?.[1] || null,

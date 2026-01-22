@@ -82,7 +82,21 @@
       </el-aside>
 
       <el-main class="admin-main">
-        <router-view />
+        <router-view v-slot="{ Component, route }">
+          <AnimatePresence mode="wait">
+            <Motion
+              :key="route.path"
+              as="div"
+              class="main-content-motion"
+              :initial="{ opacity: 0, x: 10 }"
+              :animate="{ opacity: 1, x: 0 }"
+              :exit="{ opacity: 0, x: -10 }"
+              :transition="{ duration: 0.2 }"
+            >
+              <component :is="Component" />
+            </Motion>
+          </AnimatePresence>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>
@@ -91,6 +105,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { Motion, AnimatePresence } from "motion-v";
 import { useUserStore } from "@/stores/user";
 import {
   ArrowDown,
@@ -230,5 +245,10 @@ function handleCommand(cmd) {
 
 .admin-main :deep(.page-card) {
   height: 100%;
+}
+
+.main-content-motion {
+  height: 100%;
+  width: 100%;
 }
 </style>
