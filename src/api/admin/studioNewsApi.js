@@ -1,48 +1,49 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
 
 export function getAdminStudioNewsPage(params) {
   return request({
-    url: '/admin/studio-news',
-    method: 'get',
+    url: "/admin/studio-news",
+    method: "get",
     params,
-  })
+  });
 }
 
-export function createAdminStudioNews(data) {
+export function createAdminStudioNews(data, studioId) {
   return request({
-    url: '/admin/studio-news',
-    method: 'post',
+    url: "/admin/studio-news",
+    method: "post",
+    params: { studioId },
     data,
-  })
+  });
 }
 
 export function updateAdminStudioNews(id, data) {
   return request({
     url: `/admin/studio-news/${id}`,
-    method: 'put',
+    method: "put",
     data,
-  })
+  });
 }
 
 export function deleteAdminStudioNews(id) {
   return request({
     url: `/admin/studio-news/${id}`,
-    method: 'delete',
-  })
+    method: "delete",
+  });
 }
 
 export function setAdminStudioNewsPublishStatus(id, publishStatus) {
   return request({
     url: `/admin/studio-news/${id}/publish`,
-    method: 'post',
+    method: "post",
     params: { publishStatus },
-  })
+  });
 }
 
 export function setAdminStudioNewsEnableStatus(id, enableStatus) {
   return request({
     url: `/admin/studio-news/${id}/enable`,
-    method: 'post',
+    method: "post",
     params: { enableStatus },
-  })
+  });
 }

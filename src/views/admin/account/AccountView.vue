@@ -12,6 +12,9 @@
               @click="fetchPage"
               >刷新</el-button
             >
+            <el-button type="primary" :icon="Plus" @click="openCreate"
+              >新增用户</el-button
+            >
           </div>
         </div>
       </template>
@@ -84,6 +87,11 @@
             >
               {{ row.role === "ADMIN" ? "管理员" : "用户" }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="studioName" label="关联工作室" min-width="150">
+          <template #default="{ row }">
+            {{ row.studioName || "-" }}
           </template>
         </el-table-column>
         <el-table-column prop="enableStatus" label="状态" width="100">
@@ -185,6 +193,21 @@
             <el-radio :label="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="关联工作室">
+          <el-select
+            v-model="editForm.studioId"
+            style="width: 100%"
+            placeholder="请选择"
+            clearable
+          >
+            <el-option
+              v-for="item in studioList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="editVisible = false">取消</el-button>
@@ -231,6 +254,74 @@
         >
       </template>
     </el-dialog>
+
+    <!-- 新增用户弹窗 -->
+    <el-dialog
+      v-model="createVisible"
+      title="新增用户"
+      width="450px"
+      align-center
+    >
+      <el-form
+        :model="createForm"
+        :rules="createRules"
+        ref="createFormRef"
+        label-width="100px"
+        style="padding-right: 20px"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="createForm.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="createForm.password"
+            type="password"
+            show-password
+            placeholder="请输入密码"
+          />
+        </el-form-item>
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="createForm.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-select v-model="createForm.role" style="width: 100%">
+            <el-option label="管理员" value="ADMIN" />
+            <el-option label="用户" value="USER" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联工作室" prop="studioId">
+          <el-select
+            v-model="createForm.studioId"
+            style="width: 100%"
+            placeholder="请选择(可选)"
+            clearable
+          >
+            <el-option
+              v-for="item in studioList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+          <div
+            style="
+              font-size: 12px;
+              color: #999;
+              margin-top: 5px;
+              line-height: 1.2;
+            "
+          >
+            若不绑定工作室，该管理员将拥有<b>超级管理员</b>权限。
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="submitCreate"
+          >保存</el-button
+        >
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -240,6 +331,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import {
   Search,
   Refresh,
+  Plus,
   Edit,
   Delete,
   Key,
@@ -249,10 +341,12 @@ import {
 } from "@element-plus/icons-vue";
 import {
   getAdminSysUsers,
+  createAdminSysUser,
   updateAdminSysUser,
   resetAdminSysUserPassword,
   deleteAdminSysUser,
   disableAdminSysUser,
+  getAdminStudios,
 } from "@/api/admin";
 import { formatDate as genericFormatDate } from "@/utils/format";
 
@@ -263,6 +357,9 @@ const records = ref([]);
 const page = ref(1);
 const size = ref(10);
 
+const studioList = ref([]);
+const studioMap = ref({});
+
 const filters = reactive({
   username: "",
   role: "",
@@ -272,6 +369,19 @@ const filters = reactive({
 // 列表获取
 async function fetchPage() {
   loading.value = true;
+  // 先获取工作室列表，方便回显或其他逻辑
+  try {
+    const sRes = await getAdminStudios();
+    const list = sRes.data?.data || [];
+    studioList.value = list;
+    studioMap.value = {};
+    list.forEach((s) => {
+      studioMap.value[s.id] = s.name;
+    });
+  } catch (e) {
+    console.error("获取工作室失败", e);
+  }
+
   try {
     const res = await getAdminSysUsers({
       page: page.value,
@@ -300,6 +410,55 @@ function resetFilters() {
   handleSearch();
 }
 
+// 新增相关
+const createVisible = ref(false);
+const createFormRef = ref(null);
+const createForm = reactive({
+  username: "",
+  password: "",
+  phone: "",
+  role: "ADMIN",
+  studioId: "",
+});
+const createRules = {
+  username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+  password: [
+    { required: true, message: "请输入密码", trigger: "blur" },
+    { min: 6, message: "密码长度至少6位", trigger: "blur" },
+  ],
+  role: [{ required: true, message: "请选择角色", trigger: "change" }],
+};
+
+function openCreate() {
+  createForm.username = "";
+  createForm.password = "";
+  createForm.phone = "";
+  createForm.role = "ADMIN";
+  createForm.studioId = "";
+  createVisible.value = true;
+}
+
+async function submitCreate() {
+  if (!createFormRef.value) return;
+  await createFormRef.value.validate(async (valid) => {
+    if (valid) {
+      saving.value = true;
+      try {
+        await createAdminSysUser({
+          ...createForm,
+          // 如果选择空字符串转为 null
+          studioId: createForm.studioId || null,
+        });
+        ElMessage.success("创建成功");
+        createVisible.value = false;
+        fetchPage();
+      } finally {
+        saving.value = false;
+      }
+    }
+  });
+}
+
 // 编辑相关
 const editVisible = ref(false);
 const editForm = reactive({
@@ -308,6 +467,7 @@ const editForm = reactive({
   phone: "",
   role: "",
   enableStatus: 1,
+  studioId: "",
 });
 
 function openEdit(row) {
@@ -316,6 +476,7 @@ function openEdit(row) {
   editForm.phone = row.phone || "";
   editForm.role = row.role;
   editForm.enableStatus = row.enableStatus;
+  editForm.studioId = row.studioId || "";
   editVisible.value = true;
 }
 
@@ -326,6 +487,7 @@ async function submitEdit() {
       phone: editForm.phone,
       role: editForm.role,
       enableStatus: editForm.enableStatus,
+      studioId: editForm.studioId || null,
     });
     ElMessage.success("更新成功");
     editVisible.value = false;

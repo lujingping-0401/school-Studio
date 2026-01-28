@@ -53,6 +53,16 @@
           show-overflow-tooltip
         />
         <el-table-column
+          prop="studioName"
+          label="所属工作室"
+          min-width="150"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            {{ row.studioName || "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
           prop="tags"
           label="标签"
           min-width="160"
@@ -67,6 +77,26 @@
             >
               {{ tag }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="viewCount"
+          label="浏览"
+          width="90"
+          align="center"
+        >
+          <template #default="{ row }">
+            <span style="color: #909399">{{ row.viewCount || 0 }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="likeCount"
+          label="点赞"
+          width="90"
+          align="center"
+        >
+          <template #default="{ row }">
+            <span style="color: #909399">{{ row.likeCount || 0 }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="publishStatus" label="发布" width="110">
@@ -217,6 +247,21 @@
           <el-form-item label="启用" prop="enableStatus">
             <el-switch v-model="enableSwitch" />
           </el-form-item>
+          <el-form-item label="所属工作室" prop="studioId">
+            <el-select
+              v-model="form.studioId"
+              placeholder="请选择"
+              style="width: 100%"
+              clearable
+            >
+              <el-option
+                v-for="item in studioList"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
         </el-form>
       </div>
 
@@ -268,6 +313,7 @@ import {
   setAdminStudioNewsPublishStatus,
   updateAdminStudioNews,
   uploadAdminImage,
+  getAdminStudios,
 } from "@/api/admin";
 
 const loading = ref(false);
@@ -275,6 +321,8 @@ const saving = ref(false);
 
 const total = ref(0);
 const records = ref([]);
+const studioList = ref([]);
+const studioMap = ref({});
 
 const page = ref(1);
 const size = ref(10);
@@ -339,6 +387,7 @@ const form = reactive({
   coverUrl: "",
   contentHtml: "",
   enableStatus: 1,
+  studioId: null,
 });
 
 const enableSwitch = computed({
@@ -364,10 +413,23 @@ function resetForm() {
   form.coverUrl = "";
   form.contentHtml = "";
   form.enableStatus = 1;
+  form.studioId = null;
 }
 
 async function fetchPage() {
   loading.value = true;
+
+  // 获取工作室列表以供选择
+  try {
+    const sRes = await getAdminStudios();
+    const list = sRes.data?.data || [];
+    studioList.value = list;
+    studioMap.value = {};
+    list.forEach((s) => (studioMap.value[s.id] = s.name));
+  } catch (e) {
+    console.error(e);
+  }
+
   try {
     const res = await getAdminStudioNewsPage({
       page: page.value,
@@ -401,6 +463,7 @@ function openEdit(row) {
   form.coverUrl = row.coverUrl || "";
   form.contentHtml = row.contentHtml || "";
   form.enableStatus = row.enableStatus ?? 1;
+  form.studioId = row.studioId || null;
   dialogVisible.value = true;
 }
 
@@ -424,7 +487,12 @@ async function submit() {
       };
 
       if (dialogMode.value === "create") {
-        await createAdminStudioNews(payload);
+        if (!payload.studioId && studioList.value.length > 0) {
+          // 如果是超级管理员(能看到多个工作室)，建议提示选择
+          // 但如果用户只绑定了一个，后端会自动处理，这里可选
+        }
+        // 注意：createAdminStudioNews 第二个参数是 query 里的 studioId
+        await createAdminStudioNews(payload, form.studioId);
         ElMessage.success("已创建");
       } else {
         await updateAdminStudioNews(editingId.value, {

@@ -9,7 +9,28 @@
         <div class="page-header">
           <div class="page-title">工作室简介</div>
           <div class="page-actions">
-            <el-button type="primary" plain :icon="Edit" @click="openOverwrite"
+            <!-- 工作室选择器 -->
+            <el-select
+              v-if="profileList.length > 1"
+              v-model="selectedProfileId"
+              placeholder="请选择工作室"
+              style="width: 220px; margin-right: 12px"
+              @change="handleProfileChange"
+            >
+              <el-option
+                v-for="item in profileList"
+                :key="item.id"
+                :label="getStudioName(item.studioId)"
+                :value="item.id"
+              />
+            </el-select>
+
+            <el-button
+              type="primary"
+              plain
+              :icon="Edit"
+              :disabled="!currentProfile"
+              @click="openOverwrite"
               >编辑简介</el-button
             >
             <el-button
@@ -154,7 +175,26 @@
           </div>
         </div>
 
-        <el-empty v-else description="暂无简介数据" />
+        <el-empty
+          v-else
+          :description="
+            profileList.length > 0
+              ? '请在上方选择工作室以查看详情'
+              : '暂无简介数据'
+          "
+        >
+          <template #image>
+            <el-icon
+              v-if="profileList.length > 0"
+              style="
+                font-size: 48px;
+                color: var(--el-color-primary);
+                opacity: 0.5;
+              "
+              ><School
+            /></el-icon>
+          </template>
+        </el-empty>
       </div>
     </CommonCard>
 
@@ -355,6 +395,7 @@ import {
   shallowRef,
 } from "vue";
 import { ElMessage } from "element-plus";
+import { nextTick } from "vue";
 import {
   Check,
   Close,
@@ -364,6 +405,7 @@ import {
   User,
   Phone,
   CollectionTag,
+  School,
 } from "@element-plus/icons-vue";
 import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
 import "@wangeditor/editor/dist/css/style.css";
@@ -371,12 +413,16 @@ import {
   getAdminStudioProfiles,
   overwriteAdminCurrentStudioProfile,
   uploadAdminImage,
+  getAdminStudios,
 } from "@/api/admin";
 import { formatDateTime } from "@/utils/format";
 
 const loading = ref(false);
 const saving = ref(false);
 const currentProfile = ref(null);
+const profileList = ref([]);
+const selectedProfileId = ref(null);
+const studioMap = ref({});
 
 const dialogVisible = ref(false);
 const formRef = ref(null);
@@ -390,6 +436,7 @@ const form = reactive({
   orgStructure: [],
   coreFunctions: "",
   contactUs: [],
+  studioId: null,
 });
 
 // Tag Input for orgStructure
@@ -509,17 +556,57 @@ const rules = {
 async function fetchList() {
   loading.value = true;
   try {
+    // 获取工作室列表以获取名称
+    try {
+      const sRes = await getAdminStudios();
+      const sList = sRes.data?.data || [];
+      studioMap.value = {};
+      sList.forEach((s) => {
+        studioMap.value[s.id] = s.name;
+      });
+    } catch (e) {
+      console.error("Fetch studios failed", e);
+    }
+
     const res = await getAdminStudioProfiles();
     const data = res.data?.data;
-    // data 是数组，取第一个作为当前简介
-    if (Array.isArray(data) && data.length > 0) {
-      currentProfile.value = data[0];
+    profileList.value = Array.isArray(data) ? data : [];
+
+    if (profileList.value.length === 1) {
+      // 只有一个时，自动选择
+      selectedProfileId.value = profileList.value[0].id;
+      currentProfile.value = profileList.value[0];
+    } else if (profileList.value.length > 1) {
+      // 多个时，如果之前没选过或者选的已经不在列表中了，就不自动选
+      if (
+        !selectedProfileId.value ||
+        !profileList.value.find((p) => p.id === selectedProfileId.value)
+      ) {
+        selectedProfileId.value = null;
+        currentProfile.value = null;
+      } else {
+        currentProfile.value = profileList.value.find(
+          (p) => p.id === selectedProfileId.value,
+        );
+      }
     } else {
       currentProfile.value = null;
+      selectedProfileId.value = null;
     }
   } finally {
     loading.value = false;
   }
+}
+
+function handleProfileChange(id) {
+  const profile = profileList.value.find((p) => p.id === id);
+  if (profile) {
+    currentProfile.value = profile;
+  }
+}
+
+function getStudioName(studioId) {
+  return studioMap.value[studioId] || `工作室 (ID: ${studioId})`;
 }
 
 function openOverwrite() {
@@ -533,6 +620,7 @@ function openOverwrite() {
     form.coreFunctions = currentProfile.value.coreFunctions || "";
     form.orgStructure = tryParse(currentProfile.value.orgStructure);
     form.contactUs = tryParse(currentProfile.value.contactUs);
+    form.studioId = currentProfile.value.studioId;
   } else {
     form.title = "";
     form.coverUrl = "";
@@ -543,6 +631,7 @@ function openOverwrite() {
     form.coreFunctions = "";
     form.orgStructure = [];
     form.contactUs = [];
+    form.studioId = null;
   }
   dialogVisible.value = true;
 }
@@ -550,20 +639,22 @@ function openOverwrite() {
 async function submit() {
   if (!formRef.value) return;
   await formRef.value.validate(async (valid) => {
-    if (!valid) return;
+    if (!form.studioId) {
+      ElMessage.warning("请先选择所属工作室");
+      return;
+    }
     saving.value = true;
     try {
-      await overwriteAdminCurrentStudioProfile({
-        title: form.title,
-        coverUrl: form.coverUrl,
-        contentHtml: form.contentHtml,
-        enableStatus: form.enableStatus,
-        leaderName: form.leaderName,
-        leaderIntro: form.leaderIntro,
-        coreFunctions: form.coreFunctions,
-        orgStructure: JSON.stringify(form.orgStructure),
-        contactUs: JSON.stringify(form.contactUs),
-      });
+      const { studioId, ...restForm } = form;
+      await overwriteAdminCurrentStudioProfile(
+        {
+          id: currentProfile.value?.id,
+          ...restForm,
+          orgStructure: JSON.stringify(form.orgStructure),
+          contactUs: JSON.stringify(form.contactUs),
+        },
+        studioId,
+      );
       ElMessage.success("已提交");
       dialogVisible.value = false;
       await fetchList();

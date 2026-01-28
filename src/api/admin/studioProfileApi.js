@@ -1,16 +1,17 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
 
 export function getAdminStudioProfiles() {
   return request({
-    url: '/admin/studio-profile',
-    method: 'get',
-  })
+    url: "/admin/studio-profile",
+    method: "get",
+  });
 }
 
-export function overwriteAdminCurrentStudioProfile(data) {
+export function overwriteAdminCurrentStudioProfile(data, studioId) {
   return request({
-    url: '/admin/studio-profile/current',
-    method: 'put',
+    url: "/admin/studio-profile",
+    method: "put",
+    params: { studioId },
     data,
-  })
+  });
 }

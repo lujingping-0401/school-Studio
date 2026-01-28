@@ -13,6 +13,18 @@ export function getAdminSysUsers(params) {
 }
 
 /**
+ * 创建用户
+ * @param {Object} data { username, password, phone, role, studioId }
+ */
+export function createAdminSysUser(data) {
+  return request({
+    url: "/admin/sys-user",
+    method: "post",
+    data,
+  });
+}
+
+/**
  * 重置用户密码
  * @param {Object} data { userId, password }
  */
@@ -38,7 +50,7 @@ export function disableAdminSysUser(id) {
 /**
  * 更新用户信息
  * @param {string|number} id
- * @param {Object} data { phone, role, enableStatus }
+ * @param {Object} data { phone, role, enableStatus, studioId }
  */
 export function updateAdminSysUser(id, data) {
   return request({
