@@ -39,17 +39,17 @@
           router
           class="admin-menu"
         >
-          <el-menu-item index="/admin/account">
+          <el-menu-item index="/admin/account" v-if="!userStore.studioId">
             <el-icon><User /></el-icon>
             <span>账号系统</span>
           </el-menu-item>
 
-          <el-menu-item index="/admin/studios">
+          <el-menu-item index="/admin/studios" v-if="!userStore.studioId">
             <el-icon><School /></el-icon>
             <span>工作室管理</span>
           </el-menu-item>
 
-          <el-menu-item index="/admin/banner">
+          <el-menu-item index="/admin/banner" v-if="!userStore.studioId">
             <el-icon><Picture /></el-icon>
             <span>轮播图</span>
           </el-menu-item>
@@ -79,7 +79,7 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-menu-item index="/admin/chat">
+          <el-menu-item index="/admin/chat" v-if="!userStore.studioId">
             <el-icon><ChatDotRound /></el-icon>
             <span>在线咨询</span>
           </el-menu-item>

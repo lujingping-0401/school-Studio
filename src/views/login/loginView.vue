@@ -110,6 +110,7 @@ const handleLogin = async () => {
 
       userStore.setToken(token, {
         storage: rememberMe.value ? "local" : "session",
+        studioId: res.data?.data?.studioId,
       });
       ElMessage.success("欢迎回来");
       router.push("/admin");
