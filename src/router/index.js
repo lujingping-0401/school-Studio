@@ -30,6 +30,12 @@ const router = createRouter({
             import("@/views/admin/profile/StudioProfileManageView.vue"),
         },
         {
+          path: "studio-intro-article",
+          name: "admin-studio-intro-article",
+          component: () =>
+            import("@/views/admin/profile/StudioIntroArticleView.vue"),
+        },
+        {
           path: "news",
           name: "admin-news",
           component: () => import("@/views/admin/news/NewsManageView.vue"),

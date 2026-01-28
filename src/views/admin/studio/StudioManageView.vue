@@ -5,7 +5,7 @@
         <div class="page-header">
           <div class="page-title">工作室管理</div>
           <div class="page-actions">
-            <el-button type="primary" :icon="Plus" @click="openCreate"
+            <el-button type="primary" plain :icon="Plus" @click="openCreate"
               >新增工作室</el-button
             >
             <el-button
@@ -111,7 +111,7 @@
                   :show-file-list="false"
                   accept="image/*"
                 >
-                  <el-button :icon="Upload">上传</el-button>
+                  <el-button plain :icon="Upload">上传</el-button>
                 </el-upload>
               </template>
             </el-input>
@@ -136,8 +136,8 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitForm"
+        <el-button plain @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" plain :loading="saving" @click="submitForm"
           >保存</el-button
         >
       </template>

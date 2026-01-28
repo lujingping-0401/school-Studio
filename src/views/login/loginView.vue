@@ -3,7 +3,7 @@
     <div class="login-card">
       <div class="login-header">
         <div class="logo-wrapper">
-          <el-icon :size="48" color="#409EFF"><School /></el-icon>
+          <img src="@/static/appLogo.png" alt="Logo" class="login-logo" />
         </div>
         <h2>创新工作室管理系统</h2>
         <div class="divider"></div>
@@ -46,6 +46,7 @@
         <el-form-item>
           <el-button
             type="primary"
+            plain
             class="submit-btn"
             :loading="loading"
             size="large"
@@ -171,6 +172,12 @@ const handleLogin = async () => {
       height: 80px;
       background: #f0f7ff;
       border-radius: 20px;
+
+      .login-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+      }
     }
 
     h2 {

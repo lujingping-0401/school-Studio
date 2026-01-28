@@ -59,6 +59,11 @@
             <span>工作室简介</span>
           </el-menu-item>
 
+          <el-menu-item index="/admin/studio-intro-article">
+            <el-icon><Postcard /></el-icon>
+            <span>工作室简介图文</span>
+          </el-menu-item>
+
           <el-menu-item index="/admin/news">
             <el-icon><Notification /></el-icon>
             <span>工作动态</span>
@@ -119,6 +124,7 @@ import {
   Document,
   Notification,
   Picture,
+  Postcard,
   Reading,
   School,
   User,

@@ -8,3 +8,4 @@ export * from "./fileApi";
 export * from "./sysUserApi";
 export * from "./chatApi";
 export * from "./studioApi";
+export * from "./studioIntroArticleApi";

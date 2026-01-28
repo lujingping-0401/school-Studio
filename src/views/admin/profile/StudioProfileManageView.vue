@@ -262,7 +262,7 @@
                 @keyup.enter="handleTagInputConfirm"
                 @blur="handleTagInputConfirm"
               />
-              <el-button v-else size="small" @click="showTagInput"
+              <el-button v-else size="small" plain @click="showTagInput"
                 >+ 添加架构</el-button
               >
             </div>
@@ -309,6 +309,7 @@
                       type="danger"
                       :icon="Close"
                       circle
+                      plain
                       size="small"
                       @click="removeContact(index)"
                     />
@@ -348,7 +349,7 @@
                     border: 1px solid #dcdfe6;
                   "
                 />
-                <el-button text type="danger" @click="form.coverUrl = ''"
+                <el-button text plain type="danger" @click="form.coverUrl = ''"
                   >移除</el-button
                 >
               </div>
