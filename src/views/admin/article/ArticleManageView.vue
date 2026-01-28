@@ -66,6 +66,18 @@
           show-overflow-tooltip
         />
         <el-table-column
+          prop="subtitle"
+          label="副标题"
+          min-width="160"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          prop="author"
+          label="作者"
+          width="120"
+          show-overflow-tooltip
+        />
+        <el-table-column
           prop="tags"
           label="标签"
           min-width="160"
@@ -160,6 +172,12 @@
           </el-form-item>
           <el-form-item label="标题" prop="title">
             <el-input v-model="form.title" />
+          </el-form-item>
+          <el-form-item label="副标题" prop="subtitle">
+            <el-input v-model="form.subtitle" />
+          </el-form-item>
+          <el-form-item label="作者" prop="author">
+            <el-input v-model="form.author" />
           </el-form-item>
           <el-form-item label="标签" prop="tags">
             <el-input-tag
@@ -349,6 +367,8 @@ const formRef = ref(null);
 const form = reactive({
   topicId: 1,
   title: "",
+  subtitle: "",
+  author: "",
   tags: [],
   coverUrl: "",
   contentHtml: "",
@@ -373,6 +393,8 @@ const rules = {
 function resetForm() {
   form.topicId = 1;
   form.title = "";
+  form.subtitle = "";
+  form.author = "";
   form.tags = [];
   form.coverUrl = "";
   form.contentHtml = "";
@@ -409,6 +431,8 @@ function openEdit(row) {
   editingId.value = row.id;
   form.topicId = Number(row.topicId || 1);
   form.title = row.title || "";
+  form.subtitle = row.subtitle || "";
+  form.author = row.author || "";
   form.tags = row.tags ? row.tags.split(",").filter(Boolean) : [];
   form.coverUrl = row.coverUrl || "";
   form.contentHtml = row.contentHtml || "";
@@ -425,6 +449,8 @@ async function submit() {
       const payload = {
         topicId: form.topicId,
         title: form.title,
+        subtitle: form.subtitle,
+        author: form.author,
         tags: Array.isArray(form.tags) ? form.tags.join(",") : "",
         coverUrl: form.coverUrl,
         contentHtml: form.contentHtml,

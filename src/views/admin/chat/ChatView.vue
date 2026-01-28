@@ -327,7 +327,7 @@ const fetchMessages = async (isMore = false) => {
   if (loadingMessages.value) return;
   loadingMessages.value = true;
   try {
-    const params = { limit: 5 };
+    const params = { limit: 10 };
     if (isMore && messages.value.length > 0) {
       const oldestMsg = messages.value[0];
       params.cursorSentAt = oldestMsg.sentAt;

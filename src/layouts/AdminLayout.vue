@@ -44,6 +44,11 @@
             <span>账号系统</span>
           </el-menu-item>
 
+          <el-menu-item index="/admin/studios">
+            <el-icon><School /></el-icon>
+            <span>工作室管理</span>
+          </el-menu-item>
+
           <el-menu-item index="/admin/banner">
             <el-icon><Picture /></el-icon>
             <span>轮播图</span>
@@ -115,6 +120,7 @@ import {
   Notification,
   Picture,
   Reading,
+  School,
   User,
 } from "@element-plus/icons-vue";
 
