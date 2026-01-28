@@ -51,7 +51,7 @@
             <el-image
               v-if="currentProfile.coverUrl"
               :src="currentProfile.coverUrl"
-              fit="cover"
+              fit="contain"
               class="profile-cover"
               :preview-src-list="[currentProfile.coverUrl]"
             />
@@ -162,6 +162,12 @@
                       <el-icon><Phone /></el-icon>
                       <span class="phone">{{ contact.phone }}</span>
                     </div>
+                    <div v-if="contact.wechatUrl" class="detail-row">
+                      <el-icon><Link /></el-icon>
+                      <span class="wechat-link" title="公众号地址">{{
+                        contact.wechatUrl
+                      }}</span>
+                    </div>
                   </div>
                 </div>
                 <div
@@ -270,24 +276,31 @@
                 class="contact-form-item"
               >
                 <el-row :gutter="10">
-                  <el-col :span="7">
+                  <el-col :span="5">
                     <el-input
                       v-model="item.name"
                       placeholder="姓名"
                       size="small"
                     />
                   </el-col>
-                  <el-col :span="8">
+                  <el-col :span="5">
                     <el-input
                       v-model="item.phone"
                       placeholder="电话"
                       size="small"
                     />
                   </el-col>
-                  <el-col :span="7">
+                  <el-col :span="5">
                     <el-input
                       v-model="item.distraction"
                       placeholder="职位/说明"
+                      size="small"
+                    />
+                  </el-col>
+                  <el-col :span="7">
+                    <el-input
+                      v-model="item.wechatUrl"
+                      placeholder="公众号链接/地址"
                       size="small"
                     />
                   </el-col>
@@ -406,6 +419,7 @@ import {
   Phone,
   CollectionTag,
   School,
+  Link,
 } from "@element-plus/icons-vue";
 import { Editor, Toolbar } from "@wangeditor/editor-for-vue";
 import "@wangeditor/editor/dist/css/style.css";
@@ -467,7 +481,12 @@ const removeOrgTag = (tag) => {
 
 // Contact management
 const addContact = () => {
-  form.contactUs.push({ name: "", phone: "", distraction: "" });
+  form.contactUs.push({
+    name: "",
+    phone: "",
+    distraction: "",
+    wechatUrl: "",
+  });
 };
 
 const removeContact = (index) => {
@@ -692,7 +711,6 @@ onMounted(fetchList);
   background: linear-gradient(135deg, #ffffff 0%, #f9fbff 100%);
   padding: 32px;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
   border: 1px solid #f0f3f8;
 }
 .profile-title-row {
@@ -707,7 +725,7 @@ onMounted(fetchList);
   border-radius: 12px;
   border: 1px solid #ebeef5;
   flex-shrink: 0;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
 }
 .profile-info {
   flex: 1;
@@ -849,6 +867,11 @@ onMounted(fetchList);
   line-height: 1.8;
   color: #444;
   padding: 10px;
+}
+.wechat-link {
+  color: #67c23a;
+  word-break: break-all;
+  font-size: 13px;
 }
 .profile-content :deep(img) {
   max-width: 100%;
