@@ -8,10 +8,12 @@ import vueDevTools from "vite-plugin-vue-devtools";
 // https://vite.dev/config/
 
 export default defineConfig({
+  base: "/studio",
   plugins: [vue(), vueJsx(), vueDevTools()],
   define: {
     global: "window",
   },
+
   server: {
     port: 5173,
     strictPort: true,
